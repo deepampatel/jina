@@ -45,6 +45,10 @@ def credentials_file():
     return Path.home().joinpath('.jina').joinpath('access.yml')
 
 
+def docker_credentials_file():
+    Path.home().joinpath('.jina').mkdir(parents=True, exist_ok=True)
+    return Path.home().joinpath('.jina').joinpath('docker_access.yml')
+
 class Waiter:
     def __init__(self, seconds, message=''):
         self.logger = JinaLogger(self.__class__.__name__)

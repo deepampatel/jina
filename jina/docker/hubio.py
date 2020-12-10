@@ -13,7 +13,7 @@ from docker import DockerClient
 from .. import __version__ as jina_version
 from .checker import *
 from .helper import credentials_file
-from .hubapi import _list, _register_to_mongodb, _list_local
+from .hubapi import _list, _register_to_mongodb, _list_local, _validate_docker_login
 from ..clients.python import ProgressBar
 from ..enums import BuildTestLevel
 from ..excepts import DockerLoginFailed, HubBuilderError, HubBuilderBuildError, HubBuilderTestError, ImageAlreadyExists
@@ -182,7 +182,8 @@ class HubIO:
                 raise ImageAlreadyExists(f'Image with name {name} already exists. Will NOT overwrite.')
             else:
                 self.logger.debug(f'Image with name {name} does not exist. Pushing now...')
-            self._push_docker_hub(name, readme_path)
+            if _validate_docker_login(logger=self.logger):
+                self._push_docker_hub(name, readme_path)
 
             if not build_result:
                 file_path = get_summary_path(name)
@@ -482,6 +483,11 @@ class HubIO:
         with open(file_path, 'w+') as f:
             json.dump(summary, f)
         self.logger.debug(f'stored the summary from build to {file_path}')
+
+    def _docker_auth(self):
+        docker_username = os.environ['JINA_DOCKER_USERNAME']
+        docker_password = os.environ['JINA_DOCKER_PASSWORD']
+        return docker_username, docker_password
 
     def _check_completeness(self) -> Dict:
         self.dockerfile_path = get_exist_path(self.args.path, 'Dockerfile')

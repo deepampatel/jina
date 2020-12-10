@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 from pkg_resources import resource_stream, parse_version
 from setuptools import find_packages
 
-from .helper import credentials_file
+from .helper import credentials_file, docker_credentials_file
 from ..helper import colored, yaml
 from ..logging import default_logger
 from ..logging.profile import TimeContext
@@ -159,6 +159,20 @@ def _make_hub_table(manifests):
                               f'{colored(ver, color="green"):<20s}'
                               f'{desc:<30s}')
     return info_table
+
+
+def _validate_docker_login(logger):
+    if not docker_credentials_file().is_file():
+        logger.error(f'user hasnot logged in. please login using command: {colored("docker login", attrs=["bold"])}')
+        return
+
+    with open(docker_credentials_file(), 'r') as cf:
+        cred_yml = yaml.load(cf)
+    access_token = cred_yml['access_token']
+
+    if not access_token:
+        logger.error(f'user has not logged in. please login using command: {colored("docker login", attrs=["bold"])}')
+        return
 
 
 def _register_to_mongodb(logger, summary: Dict = None):
